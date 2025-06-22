@@ -1,0 +1,67 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - 'main'
+
+resources:
+  repositories:
+    - repository: nequidev-backend
+      type: git
+      name: nequidev/devops-dev-nequidev-backend
+      ref: main
+      trigger:
+        - main
+    - repository: devops-pipelines-projects
+      type: git
+      name: nequidev/devops-pipelines-projects
+      ref: main
+
+parameters:
+  - name: Checkout
+    type: string
+    default: 'nequidev-backend'
+  - name: Url
+    type: string
+    default: 'https://nequidev-api-app.icyhill-d563c79a.eastus.azurecontainerapps.io/'
+  - name: NameProject
+    type: string
+    default: 'nequidev'
+  - name: NameProjectShort
+    type: string
+    default: 'nequidev'
+  - name: typevmss
+    type: string
+    default: 'containerapps'
+  - name: Business
+    type: string
+    default: 'nequidev'
+
+stages:
+  - template: templates/stages/sonar_cloud_py.yml@devops-pipelines-projects
+    parameters:
+      Checkout: ${{ parameters.Checkout }}
+      NameProject: ${{ parameters.NameProject }}
+    
+  - template: templates/stages/owasp_Initial_py.yml@devops-pipelines-projects
+    parameters:
+      Checkout: ${{ parameters.Checkout }}
+      Url: ${{ parameters.Url }}
+      NameProject: ${{ parameters.NameProject }}
+      StageName: 'SecurityScanInit' 
+
+  - template: templates/stages/build_push_backend.yml@devops-pipelines-projects
+    parameters:
+      Checkout: ${{ parameters.Checkout }}
+      NameProject: ${{ parameters.NameProject }}
+
+  #- template: templates/stages/deploy_app_container.yml@devops-pipelines-projects
+  #  parameters:
+  #    Checkout: ${{ parameters.Checkout }}
+
+  - template: templates/stages/owasp_final.yml@devops-pipelines-projects
+    parameters:
+      Checkout: ${{ parameters.Checkout }}
+      Url: ${{ parameters.Url }}
+      NameProject: ${{ parameters.NameProject }}
+      StageName: 'SecurityScanFin'

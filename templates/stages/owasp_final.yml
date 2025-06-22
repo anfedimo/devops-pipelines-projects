@@ -1,0 +1,134 @@
+parameters:
+  - name: Checkout
+    type: string
+    default: ''
+  - name: StageName
+    type: string
+    default: ''
+  - name: Url
+    type: string
+    default: ''
+  - name: ReportNameNettacker
+    type: string
+    default: 'OWASP Penetration Testing Report'
+  - name: ReportNameZAP
+    type: string
+    default: 'OWASP ZAP Final Report'
+  - name: ReportNameSSL
+    type: string
+    default: 'OWASP SSL & TLS Security Report'
+  - name: typevmss
+    type: string
+    default: owasp
+  - name: NameProject
+    type: string
+
+stages:
+  - stage: ${{ parameters.StageName }}
+    displayName: 'OWASP Fin Security Scans'
+    jobs:
+      - job: FullSecurityScan
+        displayName: 'Run Final OWASP Security Scans'
+        pool:
+          name: nequi-hosted-agents
+        steps:
+          - checkout: ${{ parameters.Checkout }}
+
+          # OWASP Nettacker
+          - script: |
+              echo $(DOCKERHUBUSERNAME) | docker login -u $(DOCKERHUBPASSWORD) --password-stdin
+              docker pull owasp/nettacker:latest
+              docker pull owasp/o-saft:latest
+              docker pull zaproxy/zap-stable:latest
+            displayName: 'Login to Docker Hub OWASP Nettacker Image'
+
+          - script: |
+              mkdir -p $(System.DefaultWorkingDirectory)/nettacker-reports
+              docker run --rm -v $(System.DefaultWorkingDirectory)/nettacker-reports:/root/.owasp owasp/nettacker:latest \
+              /bin/bash -c "pip install multiprocess numpy PyYAML netaddr texttable sqlalchemy aiohttp pyOpenSSL && python3 nettacker.py -i ${{ parameters.Url }} -o /root/.owasp/nettacker_report.html -m port_scan,admin_scan,content_security_policy_vuln,web_technologies_scan,http_options_enabled_vuln,http_cookie_vuln,dir_scan"
+              sudo chown -R $(id -u):$(id -g) $(System.DefaultWorkingDirectory)
+            displayName: 'Run OWASP Penetration Testing Scan'
+            timeoutInMinutes: 5
+            continueOnError: true
+
+          - publish: '$(System.DefaultWorkingDirectory)/nettacker-reports'
+            artifact: 'Nettacker_Report'
+            condition: succeeded()
+
+          - task: PublishHtmlReport@1
+            inputs:
+              reportDir: '$(System.DefaultWorkingDirectory)/nettacker-reports/nettacker_report.html'
+              reportTitle: ${{ parameters.ReportNameNettacker }}
+              reportFiles: 'nettacker_report.html'
+              tabName: ${{ parameters.ReportNameNettacker }}
+            displayName: 'Publish OWASP Nettacker Report'
+
+
+
+          # OWASP ZAP Scan
+          - script: |
+              mkdir -p $(System.DefaultWorkingDirectory)/zap_reports
+            displayName: 'Create and Set Permissions for ZAP Reports Directory'
+
+          - script: |
+              docker run --user root -v $(System.DefaultWorkingDirectory)/zap_reports:/zap/wrk -e TZ="America/Bogota" -t zaproxy/zap-stable:latest zap-full-scan.py -t ${{ parameters.Url }} -r zap_report.html -z "-config api.disablekey=true -config replacer.full_list(0).description=Mozilla/5.0 -config replacer.full_list(0).enabled=true -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=User-Agent -config replacer.full_list(0).replacement='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'" -I
+            displayName: 'Run OWASP ZAP Final Scan'
+            timeoutInMinutes: 5
+
+          - task: PublishHtmlReport@1
+            inputs:
+              reportDir: '$(System.DefaultWorkingDirectory)/zap_reports/zap_report.html'
+              reportTitle: ${{ parameters.ReportNameZAP }}
+              reportFiles: 'zap_report.html'
+              tabName: ${{ parameters.ReportNameZAP }}
+            displayName: 'Publish OWASP ZAP Final Report'
+
+
+          # OWASP SSL/TLS Scan
+          - script: |
+              mkdir -p $(System.DefaultWorkingDirectory)/osaft-reports
+
+              echo "<html><head><style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              th { background-color: #f4f4f4; }
+              .wordart { font-size: 60px; font-weight: bold; color: #bd7211; text-shadow: 2px 2px 5px #000; text-align: center; }
+              </style></head><body>
+              <div class='wordart'>OWASP SSL/TLS Security Report</div>
+              <table>
+              <thead>
+              <tr><th>Property</th><th>Value</th></tr>
+              </thead>
+              <tbody>" > $(System.DefaultWorkingDirectory)/osaft-reports/osaft_report.html
+
+              docker run --rm owasp/o-saft:latest o-saft.pl +info --ignore-no-conn ${{ parameters.Url }} | while read -r line; do
+                if [[ "$line" =~ ^([a-zA-Z0-9_ -]+):[[:space:]]*(.*)$ ]]; then
+                  property="${BASH_REMATCH[1]}"
+                  value="${BASH_REMATCH[2]}"
+                  echo "<tr><td>${property//<>&\"}</td><td>${value//<>&\"}</td></tr>" >> $(System.DefaultWorkingDirectory)/osaft-reports/osaft_report.html
+                fi
+              done
+
+              echo "</tbody></table></body></html>" >> $(System.DefaultWorkingDirectory)/osaft-reports/osaft_report.html
+
+              exit 0
+            displayName: 'Run OWASP SSL & TLS Security Report'
+            timeoutInMinutes: 5
+            continueOnError: true
+
+          - task: PublishHtmlReport@1
+            inputs:
+              reportDir: '$(System.DefaultWorkingDirectory)/osaft-reports/osaft_report.html'
+              reportTitle: ${{ parameters.ReportNameSSL }}
+              reportFiles: 'osaft_report.html'
+              tabName: ${{ parameters.ReportNameSSL }}
+            displayName: 'Publish OWASP SSL & TLS Security Report'
+
+          - script: |
+              echo "Stage Successful."
+              exit 0
+            displayName: 'Force Stage Success'
+            timeoutInMinutes: 5
+            continueOnError: true
+            condition: always()

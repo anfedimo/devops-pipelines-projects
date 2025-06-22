@@ -1,0 +1,64 @@
+parameters:
+  - name: Checkout
+    default: self
+  - name: NameProject
+    default: nequidev
+
+stages:
+  - stage: BuildPushBackend
+    displayName: Build and Push Backend
+    jobs:
+      - job: BuildAndPush
+        displayName: Build and Push Docker Image
+        pool:
+          name: nequi-hosted-agents
+        steps:
+          - checkout: ${{ parameters.Checkout }}
+
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'Azure subscription 1(43daa762-3e56-43e0-ae73-c8022b203d9b)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az acr login --name nequidev
+                docker build -t nequidev.azurecr.io/nequidev-api:latest .
+                docker push nequidev.azurecr.io/nequidev-api:latest
+
+          - script: |
+              docker buildx create --use || true
+              docker buildx build \
+                --platform linux/amd64 \
+                -t nequidev.azurecr.io/nequidev-api:latest \
+                --push .
+            displayName: Build and Push Docker Image
+
+          - task: AzureCLI@2
+            displayName: Deploy Container App from image
+            inputs:
+              azureSubscription: 'Azure subscription 1(43daa762-3e56-43e0-ae73-c8022b203d9b)'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                cat <<EOF > containerapp.yml
+                location: eastus
+                properties:
+                  configuration:
+                    ingress:
+                      external: true
+                      targetPort: 9000
+                    registries:
+                      - server: nequidev.azurecr.io
+                  template:
+                    containers:
+                      - name: nequidev-api
+                        image: nequidev.azurecr.io/nequidev-api:latest
+                        resources:
+                          cpu: 0.5
+                          memory: 1.0Gi
+                  EOF
+
+                az containerapp update \
+                  --name nequidev-api-app \
+                  --resource-group rgnequi \
+                  --yaml containerapp.yml

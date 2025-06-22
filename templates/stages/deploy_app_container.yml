@@ -1,0 +1,59 @@
+parameters:
+  - name: Checkout
+    type: string
+    default: ''
+  - name: typevmss
+    type: string
+    default: containerapps
+
+stages:
+  - stage: DeployContainerApp
+    displayName: 'Deploy Container App to Azure Container Apps'
+    jobs:
+      - deployment: DeployContainerApp
+        displayName: 'Deploy Container App'
+        environment: $(environmentName)
+        pool:
+          name: nequi-hosted-agents
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: ${{ parameters.Checkout }}
+
+                - task: CmdLine@2
+                  displayName: 'Wait for the current operation'
+                  inputs:
+                    script: |
+                      echo "Waiting 15 seconds for the ongoing operation to complete..."
+                      sleep 15
+
+                - task: AzureCLI@2
+                  displayName: 'Deploy Container App'
+                  inputs:
+                    azureSubscription: '$(connectedServiceNameARM)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      # Login to Azure using service principal
+                        az login --service-principal -u $(AZURESERVICEPRINCIPALID) -p $(AZURESERVICEPRINCIPALPASSWORD) --tenant $(AZURETENANTID)
+                      # Login to the Azure Container Registry
+                        az acr login --name $(acrName)
+                        environment_id=$(az containerapp env show -n $(containerappenv) -g $(resourceGroupAppEnv) --query id --output tsv)
+                      # Update the container app with the new image
+                        az containerapp up  --name $(contappname) \
+                                              --resource-group $(resourceGroup) \
+                                              --image $(containerRegistry)/$(imageRepository):$(Build.BuildId) \
+                                              --environment  $environment_id \
+                                              --registry-server $(containerRegistry) \
+                                              --registry-username $(acrUsername) \
+                                              --registry-password $(ACRPASSWORDPUSH) \
+                                              --target-port $(targetPort) \
+                                              --ingress $(ingress)
+
+                - task: CmdLine@2
+                  displayName: 'Pause for 2 minutes'
+                  inputs:
+                    script: |
+                      echo "Waiting for 2 minutes before continuing..."
+                      sleep 120

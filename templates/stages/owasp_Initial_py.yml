@@ -1,0 +1,191 @@
+parameters:
+  - name: Checkout
+    type: string
+    default: ''
+  - name: StageName
+    type: string
+    default: ''
+  - name: Url
+    type: string
+    default: ''
+  - name: ReportNameDependencyCheck
+    type: string
+    default: 'Dependency Check Report'
+  - name: typevmss
+    type: string
+    default: owasp
+  - name: NameProject
+    type: string
+
+stages:
+  - stage: ${{ parameters.StageName }}
+    displayName: 'Dependency Initial Security Scans'
+    jobs:
+      - job: FullSecurityScan
+        displayName: 'Run Initial Security Scans'
+        pool:
+          name: nequi-hosted-agents
+        steps:
+          - checkout: ${{ parameters.Checkout }}
+            displayName: 'Checkout Repository'
+
+          - script: |
+              python3.11 -m venv myenv
+              if [ ! -d "myenv" ]; then
+                echo "Error: Could not create the virtual environment"
+                exit 1
+              fi
+              source myenv/bin/activate
+              pip install --upgrade pip
+              pip install pip-audit
+            displayName: 'Set up Python 3.11 virtual environment'
+
+          - script: |
+              source myenv/bin/activate
+              pip install -r requirements.txt
+            displayName: 'Install Dependencies'
+
+          - script: |
+              source myenv/bin/activate
+              pip install pip-audit pipdeptree
+              pip-audit -r requirements.txt --format json -o dependency-check-report.json || true
+              pipdeptree --warn silence --json > dependency-tree.json
+            displayName: 'Run Dependency and Transitive Analysis'
+
+          - script: |
+              python3 - <<EOF
+              import json
+
+              # Load JSON data from pip-audit
+              with open("dependency-check-report.json", "r") as file:
+                  data = json.load(file)
+
+              # Load JSON data from pipdeptree
+              with open("dependency-tree.json", "r") as file:
+                  dependency_tree = json.load(file)
+
+              # Map dependencies for easy lookup
+              tree_map = {dep["package"]["key"]: dep for dep in dependency_tree}
+
+              vulnerabilities = []
+              optimal = []
+              transitives_deprecated = []
+
+              for dependency in data.get("dependencies", []):
+                  name = dependency.get("name", "N/A")
+                  version = dependency.get("version", "N/A")
+                  vulns = dependency.get("vulns", [])
+                  status = "deprecated" if vulns else "Optimal"
+
+                  # Extract solutions from vulnerabilities
+                  solution = "No action required"
+                  if vulns:
+                      patches = [f"Upgrade to {', '.join(vuln.get('fix_versions', ['N/A']))}" for vuln in vulns]
+                      solution = " | ".join(patches)
+
+                  # Add transitives from pipdeptree
+                  transitives = tree_map.get(name, {}).get("dependencies", [])
+                  transitives_formatted = []
+                  for dep in transitives:
+                      trans_name = dep["key"]
+                      trans_version = dep["installed_version"]
+                      trans_vulnerabilities = [
+                          vuln for vuln in data.get("dependencies", [])
+                          if vuln.get("name") == trans_name and vuln.get("vulns")
+                      ]
+                      trans_style = "color: #ff4800;" if trans_vulnerabilities else "color: black;"
+                      if trans_vulnerabilities:
+                          transitives_deprecated.append({
+                              "name": trans_name,
+                              "version": trans_version
+                          })
+                      transitives_formatted.append(f"<span style='{trans_style}'>{trans_name} ({trans_version})</span>")
+
+                  dependency["transitives"] = ", ".join(transitives_formatted)
+                  dependency["solution"] = solution
+
+                  if vulns:
+                      vulnerabilities.append(dependency)
+                  else:
+                      optimal.append(dependency)
+
+              # Generate HTML report
+              html_content = f"""
+              <html>
+              <head>
+                  <style>
+                      body {{ font-family: Arial, sans-serif; }}
+                      .container {{ text-align: left; margin: 20px; }}
+                      .wordart {{ font-size: 60px; font-weight: bold; color: #bd7211; text-shadow: 2px 2px 5px #000; text-align: center; }}
+                      .info {{ font-size: 24px; margin-bottom: 20px; }}
+                      table {{ margin: 20px auto; border-collapse: collapse; width: 80%; }}
+                      th, td {{ border: 1px solid #ddd; text-align: left; padding: 8px; }}
+                      th {{ background-color: #f2f2f2; }}
+                      tr:nth-child(even) {{ background-color: #f9f9f9; }}
+                      .deprecated {{ font-weight: bold; color: #ff4800; font-size: 20px; }}
+                  </style>
+              </head>
+              <body>
+                  <div class="wordart">Dependency Check Report</div>
+                  <div class="container">
+                      <p class="info">Total optimal dependencies: <strong>{len(optimal)}</strong></p>
+                      <p class="info">Total deprecated dependencies: <strong>{len(vulnerabilities)}</strong></p>
+                      <p class="info">Total deprecated dependencies transitives: <strong>{len(transitives_deprecated)}</strong></p>
+                  </div>
+                  <table>
+                      <tr>
+                          <th>Dependency</th>
+                          <th>Version</th>
+                          <th>Status</th>
+                          <th>Reason</th>
+                          <th>Solution</th>
+                          <th>Dependency Transitives</th>
+                      </tr>
+              """
+
+              for dependency in vulnerabilities + optimal:
+                  name = dependency.get("name", "N/A")
+                  version = dependency.get("version", "N/A")
+                  vulns = dependency.get("vulns", [])
+                  status = "deprecated" if vulns else "Optimal"
+                  reason = f"{len(vulns)} Vulnerability found" if vulns else "No issues reported"
+                  solution = dependency.get("solution", "No action required")
+                  transitives = dependency.get("transitives", "None")
+
+                  row_class = "deprecated" if vulns else ""
+
+                  html_content += f"""
+                      <tr class="{row_class}">
+                          <td>{name}</td>
+                          <td>{version}</td>
+                          <td>{status}</td>
+                          <td>{reason}</td>
+                          <td>{solution}</td>
+                          <td>{transitives}</td>
+                      </tr>
+                  """
+
+              html_content += """
+                  </table>
+              </body>
+              </html>
+              """
+
+              # Save HTML report
+              with open("dependency-check-report.html", "w") as file:
+                  file.write(html_content)
+              EOF
+            displayName: 'Generate HTML Report with Corrected Solution Column'
+
+          - script: |
+              mkdir -p $(System.DefaultWorkingDirectory)/DependencyReports
+              cp dependency-check-report.html $(System.DefaultWorkingDirectory)/DependencyReports/
+            displayName: 'Ensure Directory and Move HTML Report'
+
+          - task: PublishHtmlReport@1
+            inputs:
+              reportDir: '$(System.DefaultWorkingDirectory)/DependencyReports/dependency-check-report.html'
+              reportTitle: 'Dependency Check Report'
+              reportFiles: 'dependency-check-report.html'
+              tabName: 'Dependency Check Report'
+            displayName: 'Publish Updated Dependency Check Report'

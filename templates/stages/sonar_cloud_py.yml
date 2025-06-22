@@ -1,0 +1,74 @@
+parameters:
+  - name: Checkout
+    type: string
+    default: ''
+  - name: ReportName
+    type: string
+    default: 'Dependency Check Report'
+  - name: typevmss
+    type: string
+    default: containerapps
+  - name: NameProject
+    type: string
+  - name: Business
+    type: string
+    default: 'nequidev'
+
+stages:
+  - stage: "CodeAnalysis"
+    displayName: "Code Analysis SonarCloud"
+    jobs:
+      - job: CodeAnalysis
+        strategy:
+          maxParallel: 1
+        displayName: 'Analyze Code'
+        pool:
+          name: nequi-hosted-agents
+        steps:
+            
+          - checkout: ${{ parameters.Checkout }}
+
+          - script: |
+              python3.11 -m venv myenv
+              source myenv/bin/activate
+              pip install --upgrade pip
+            displayName: 'Set up Python 3.11 virtual environment'
+
+          - script: |
+              pip install -r requirements.txt
+              pip install pytest-cov
+            displayName: 'Install Dependencies'
+
+          - script: |
+              export PYTHONPATH=$(pwd)
+              python3 -m pytest --cov=. --cov-report=xml --cov-report=html:coverage_html
+            displayName: 'Run tests and generate coverage report'
+
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: '7.0.x'
+
+          - task: PublishCodeCoverageResults@2
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
+              reportDirectory: '$(System.DefaultWorkingDirectory)/coverage_html'
+              additionalCodeCoverageFiles: '**/*.html'
+
+          - task: SonarCloudPrepare@3
+            inputs:
+              SonarCloud: 'sonar-nequi'
+              organization: 'nequidev'
+              scannerMode: 'CLI'
+              configMode: 'file'
+              configFile: 'sonar-project.properties'
+            displayName: 'Prepare SonarCloud analysis configuration'
+
+          - task: SonarCloudAnalyze@3
+            displayName: 'Run SonarCloud analysis'
+
+          - task: SonarCloudPublish@3
+            inputs:
+              pollingTimeoutSec: '300'
+            displayName: 'Publish SonarCloud results'
