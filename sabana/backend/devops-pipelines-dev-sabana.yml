@@ -38,10 +38,6 @@ parameters:
     default: 'sabana'
 
 stages:
-  - template: templates/stages/sonar_cloud_py.yml@devops-pipelines-projects
-    parameters:
-      Checkout: ${{ parameters.Checkout }}
-      NameProject: ${{ parameters.NameProject }}
     
   - template: templates/stages/owasp_Initial_py.yml@devops-pipelines-projects
     parameters:
@@ -50,14 +46,7 @@ stages:
       NameProject: ${{ parameters.NameProject }}
       StageName: 'SecurityScanInit' 
 
-  - template: templates/stages/build_push_backend.yml@devops-pipelines-projects
-    parameters:
-      Checkout: ${{ parameters.Checkout }}
-      NameProject: ${{ parameters.NameProject }}
 
-  #- template: templates/stages/deploy_app_container.yml@devops-pipelines-projects
-  #  parameters:
-  #    Checkout: ${{ parameters.Checkout }}
 
   - template: templates/stages/owasp_final.yml@devops-pipelines-projects
     parameters:
