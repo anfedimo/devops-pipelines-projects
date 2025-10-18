@@ -8,13 +8,13 @@ resources:
   repositories:
     - repository: sabana-backend
       type: git
-      name: sabana/devops-dev-sabana-backend
+      name: Software-Architecture-Project-3/devops-dev-sabana-backend
       ref: main
       trigger:
         - main
     - repository: devops-pipelines-projects
       type: git
-      name: sabana/devops-pipelines-projects
+      name: Software-Architecture-Project-3/devops-pipelines-projects
       ref: main
 
 parameters:
