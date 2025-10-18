@@ -14,7 +14,7 @@ stages:
         displayName: 'Deploy Container App'
         environment: $(environmentName)
         pool:
-          name: nequi-hosted-agents
+          name: sabana-hosted-agents
         strategy:
           runOnce:
             deploy:

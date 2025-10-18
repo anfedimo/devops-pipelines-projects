@@ -23,7 +23,7 @@ stages:
           maxParallel: 1
         displayName: 'Analyze Code'
         pool:
-          name: nequi-hosted-agents
+          name: sabana-hosted-agents
         steps:
             
           - checkout: ${{ parameters.Checkout }}
@@ -58,7 +58,7 @@ stages:
 
           - task: SonarCloudPrepare@3
             inputs:
-              SonarCloud: 'sonar-nequi'
+              SonarCloud: 'sonar-sabana'
               organization: 'sabana'
               scannerMode: 'CLI'
               configMode: 'file'

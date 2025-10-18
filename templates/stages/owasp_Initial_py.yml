@@ -24,7 +24,7 @@ stages:
       - job: FullSecurityScan
         displayName: 'Run Initial Security Scans'
         pool:
-          name: nequi-hosted-agents
+          name: sabana-hosted-agents
         steps:
           - checkout: ${{ parameters.Checkout }}
             displayName: 'Checkout Repository'

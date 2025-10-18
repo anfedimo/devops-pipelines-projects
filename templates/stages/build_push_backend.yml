@@ -11,7 +11,7 @@ stages:
       - job: BuildAndPush
         displayName: Build and Push Docker Image
         pool:
-          name: nequi-hosted-agents
+          name: sabana-hosted-agents
         steps:
           - checkout: ${{ parameters.Checkout }}
 
@@ -60,5 +60,5 @@ stages:
 
                 az containerapp update \
                   --name sabana-api-app \
-                  --resource-group rgnequi \
+                  --resource-group rgsabana \
                   --yaml containerapp.yml
