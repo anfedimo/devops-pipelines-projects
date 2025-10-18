@@ -58,7 +58,7 @@ stages:
 
           - task: SonarCloudPrepare@3
             inputs:
-              SonarCloud: 'sonar-sabana'
+              SonarCloud: 'sabana-sonar'
               organization: 'sabana'
               scannerMode: 'CLI'
               configMode: 'file'

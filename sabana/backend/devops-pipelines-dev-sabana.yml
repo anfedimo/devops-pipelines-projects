@@ -57,9 +57,7 @@ stages:
 
   - template: templates/stages/build_push_backend.yml@devops-pipelines-projects
     parameters:
-      Checkout: ${{ parameters.Checkout }}
       AgentPool: ${{ parameters.AgentPool }}
-      NameProject: ${{ parameters.NameProject }}
       ImageTag: ${{ parameters.ImageTag }}
       DockerRegistryServiceConnection: ${{ parameters.DockerRegistryServiceConnection }}
       DockerImageRepository: ${{ parameters.DockerImageRepository }}
