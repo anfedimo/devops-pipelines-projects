@@ -24,7 +24,7 @@ stages:
         pool: ${{ parameters.AgentPool }}
 
         steps:
-          - checkout: self
+          - checkout: ${{ parameters.Checkout }}
 
           # 1. Tarea para autenticar, construir y empujar la imagen
           - task: Docker@2
