@@ -59,6 +59,7 @@ stages:
     parameters:
       AgentPool: ${{ parameters.AgentPool }}
       ImageTag: ${{ parameters.ImageTag }}
+      Checkout: ${{ parameters.Checkout }}
       DockerRegistryServiceConnection: ${{ parameters.DockerRegistryServiceConnection }}
       DockerImageRepository: ${{ parameters.DockerImageRepository }}
 

@@ -1,4 +1,7 @@
 parameters:
+  - name: Checkout
+    type: string
+    default: ''
   # El agente autoalojado que usarás se encuentra en el pool 'Default'
   - name: AgentPool
     type: string
