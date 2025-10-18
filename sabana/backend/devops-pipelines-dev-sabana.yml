@@ -23,7 +23,7 @@ parameters:
     default: 'sabana-backend'
   - name: Url
     type: string
-    default: 'https://sabana-api-app.icyhill-d563c79a.eastus.azurecontainerapps.io/'
+    default: 'https://abogadaalexandra.com/'
   - name: NameProject
     type: string
     default: 'sabana'
@@ -67,4 +67,5 @@ stages:
     parameters:
       Checkout: ${{ parameters.Checkout }}
       Url: ${{ parameters.Url }}
+
       NameProject: ${{ parameters.NameProject }}
