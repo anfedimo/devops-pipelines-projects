@@ -2,7 +2,7 @@ parameters:
   - name: Checkout
     default: self
   - name: NameProject
-    default: nequidev
+    default: sabana
 
 stages:
   - stage: BuildPushBackend
@@ -21,15 +21,15 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                az acr login --name nequidev
-                docker build -t nequidev.azurecr.io/nequidev-api:latest .
-                docker push nequidev.azurecr.io/nequidev-api:latest
+                az acr login --name sabana
+                docker build -t sabana.azurecr.io/sabana-api:latest .
+                docker push sabana.azurecr.io/sabana-api:latest
 
           - script: |
               docker buildx create --use || true
               docker buildx build \
                 --platform linux/amd64 \
-                -t nequidev.azurecr.io/nequidev-api:latest \
+                -t sabana.azurecr.io/sabana-api:latest \
                 --push .
             displayName: Build and Push Docker Image
 
@@ -48,17 +48,17 @@ stages:
                       external: true
                       targetPort: 9000
                     registries:
-                      - server: nequidev.azurecr.io
+                      - server: sabana.azurecr.io
                   template:
                     containers:
-                      - name: nequidev-api
-                        image: nequidev.azurecr.io/nequidev-api:latest
+                      - name: sabana-api
+                        image: sabana.azurecr.io/sabana-api:latest
                         resources:
                           cpu: 0.5
                           memory: 1.0Gi
                   EOF
 
                 az containerapp update \
-                  --name nequidev-api-app \
+                  --name sabana-api-app \
                   --resource-group rgnequi \
                   --yaml containerapp.yml

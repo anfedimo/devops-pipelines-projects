@@ -12,7 +12,7 @@ parameters:
     type: string
   - name: Business
     type: string
-    default: 'nequidev'
+    default: 'sabana'
 
 stages:
   - stage: "CodeAnalysis"
@@ -59,7 +59,7 @@ stages:
           - task: SonarCloudPrepare@3
             inputs:
               SonarCloud: 'sonar-nequi'
-              organization: 'nequidev'
+              organization: 'sabana'
               scannerMode: 'CLI'
               configMode: 'file'
               configFile: 'sonar-project.properties'

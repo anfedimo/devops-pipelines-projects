@@ -6,36 +6,36 @@ trigger:
 
 resources:
   repositories:
-    - repository: nequidev-backend
+    - repository: sabana-backend
       type: git
-      name: nequidev/devops-dev-nequidev-backend
+      name: sabana/devops-dev-sabana-backend
       ref: main
       trigger:
         - main
     - repository: devops-pipelines-projects
       type: git
-      name: nequidev/devops-pipelines-projects
+      name: sabana/devops-pipelines-projects
       ref: main
 
 parameters:
   - name: Checkout
     type: string
-    default: 'nequidev-backend'
+    default: 'sabana-backend'
   - name: Url
     type: string
-    default: 'https://nequidev-api-app.icyhill-d563c79a.eastus.azurecontainerapps.io/'
+    default: 'https://sabana-api-app.icyhill-d563c79a.eastus.azurecontainerapps.io/'
   - name: NameProject
     type: string
-    default: 'nequidev'
+    default: 'sabana'
   - name: NameProjectShort
     type: string
-    default: 'nequidev'
+    default: 'sabana'
   - name: typevmss
     type: string
     default: 'containerapps'
   - name: Business
     type: string
-    default: 'nequidev'
+    default: 'sabana'
 
 stages:
   - template: templates/stages/sonar_cloud_py.yml@devops-pipelines-projects
