@@ -62,3 +62,9 @@ stages:
       Checkout: ${{ parameters.Checkout }}
       DockerRegistryServiceConnection: ${{ parameters.DockerRegistryServiceConnection }}
       DockerImageRepository: ${{ parameters.DockerImageRepository }}
+
+  - template: templates/stages/owasp_final.yml@devops-pipelines-projects
+    parameters:
+      Checkout: ${{ parameters.Checkout }}
+      Url: ${{ parameters.Url }}
+      NameProject: ${{ parameters.NameProject }}
