@@ -76,3 +76,20 @@ stages:
                 --name sabana-api-local \
                 $IMAGE_FULL_NAME
             displayName: Run Docker Container Locally
+
+          - script: |
+              echo "Waiting 5 seconds for the container to fully initialize..."
+              sleep 5
+              
+              echo "Testing access to http://localhost:8080 from the agent..."
+              # curl -f: El flag -f (fail) asegura que curl devuelva un error si el servidor responde con un código HTTP de error (4xx o 5xx),
+              # o si la conexión falla. Esto forzará la falla del pipeline si el test no pasa.
+              curl -f http://localhost:8080
+              
+              if [ $? -eq 0 ]; then
+                echo "✅ Success! Local deployment verified via HTTP."
+              else
+                echo "❌ Failure! Local deployment test failed (HTTP error or connection refusal)."
+                exit 1 # Forzar la falla del Job si el test no pasa
+              fi
+            displayName: Verify Local Deployment
