@@ -1,64 +1,75 @@
 parameters:
-  - name: Checkout
-    default: self
-  - name: NameProject
-    default: sabana
+  # El agente autoalojado que usarás se encuentra en el pool 'Default'
+  - name: AgentPool
+    type: string
+  # Nombre de la conexión de servicio de Docker Hub (debe estar creada en Azure DevOps)
+  - name: DockerRegistryServiceConnection
+    type: string
+  # Nombre del repositorio en Docker Hub (anfedimo/sabana-api)
+  - name: DockerImageRepository
+    type: string
+  - name: ImageTag
+    type: string
 
+# ==============================================================================
+# ETAPA 1: BUILD Y PUSH
+# ==============================================================================
 stages:
   - stage: BuildPushBackend
-    displayName: Build and Push Backend
+    displayName: 📦 Build and Push Backend Image
     jobs:
       - job: BuildAndPush
         displayName: Build and Push Docker Image
-        pool: 'Default'
+        # Usamos el pool donde está tu agente (MacbookM3Agent)
+        pool: ${{ parameters.AgentPool }}
 
         steps:
-          - checkout: ${{ parameters.Checkout }}
+          - checkout: self
 
-          - task: AzureCLI@2
+          # 1. Tarea para autenticar, construir y empujar la imagen
+          - task: Docker@2
+            displayName: Build and Push Image to Docker Hub
             inputs:
-              azureSubscription: 'Azure subscription 1(43daa762-3e56-43e0-ae73-c8022b203d9b)'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                az acr login --name sabana
-                docker build -t sabana.azurecr.io/sabana-api:latest .
-                docker push sabana.azurecr.io/sabana-api:latest
+              containerRegistry: ${{ parameters.DockerRegistryServiceConnection }}
+              repository: ${{ parameters.DockerImageRepository }}
+              command: 'buildAndPush'
+              # Asegúrate de que tu Dockerfile esté en la raíz del contexto
+              Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+              tags: |
+                ${{ parameters.ImageTag }}
 
+  # ==============================================================================
+  # ETAPA 2: DESPLIEGUE LOCAL
+  # ==============================================================================
+  - stage: DeployBackend
+    displayName: 🚀 Deploy Backend Locally
+    # Depende de que la etapa anterior haya sido exitosa
+    dependsOn: BuildPushBackend
+    jobs:
+      - job: DeployLocally
+        displayName: Deploy Docker Container on Local Agent
+        # ¡IMPORTANTE! Debe usar el pool del agente autoalojado (MacbookM3Agent)
+        pool: ${{ parameters.AgentPool }}
+
+        steps:
+          # 1. Detener y eliminar el contenedor anterior para evitar conflictos de nombres/puertos
+          # '|| true' permite que el script no falle si el contenedor no existe
           - script: |
-              docker buildx create --use || true
-              docker buildx build \
-                --platform linux/amd64 \
-                -t sabana.azurecr.io/sabana-api:latest \
-                --push .
-            displayName: Build and Push Docker Image
+              echo "Stopping and removing old container if exists..."
+              docker stop sabana-api-local || true
+              docker rm sabana-api-local || true
+            displayName: Cleanup Old Container
+            continueOnError: true
 
-          - task: AzureCLI@2
-            displayName: Deploy Container App from image
-            inputs:
-              azureSubscription: 'Azure subscription 1(43daa762-3e56-43e0-ae73-c8022b203d9b)'
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                cat <<EOF > containerapp.yml
-                location: eastus
-                properties:
-                  configuration:
-                    ingress:
-                      external: true
-                      targetPort: 9000
-                    registries:
-                      - server: sabana.azurecr.io
-                  template:
-                    containers:
-                      - name: sabana-api
-                        image: sabana.azurecr.io/sabana-api:latest
-                        resources:
-                          cpu: 0.5
-                          memory: 1.0Gi
-                  EOF
-
-                az containerapp update \
-                  --name sabana-api-app \
-                  --resource-group rgsabana \
-                  --yaml containerapp.yml
+          # 2. Pull y ejecución de la nueva imagen
+          - script: |
+              IMAGE_FULL_NAME=${{ parameters.DockerImageRepository }}:${{ parameters.ImageTag }}
+              echo "Pulling image from Docker Hub: $IMAGE_FULL_NAME"
+              docker pull $IMAGE_FULL_NAME
+              
+              echo "Running new container (Port 8080:8080)..."
+              # Ejecutar el contenedor en segundo plano (-d) y mapear los puertos (-p)
+              docker run -d -p 8080:8080 \
+                --name sabana-api-local \
+                $IMAGE_FULL_NAME
+            displayName: Run Docker Container Locally
