@@ -11,7 +11,7 @@ stages:
       - job: BuildAndPush
         displayName: Build and Push Docker Image
         pool:
-          name: sabana-hosted-agents
+          vmImage: 'ubuntu-latest'
         steps:
           - checkout: ${{ parameters.Checkout }}
 

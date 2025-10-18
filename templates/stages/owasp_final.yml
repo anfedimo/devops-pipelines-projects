@@ -30,7 +30,7 @@ stages:
       - job: FullSecurityScan
         displayName: 'Run Final OWASP Security Scans'
         pool:
-          name: sabana-hosted-agents
+          vmImage: 'ubuntu-latest'
         steps:
           - checkout: ${{ parameters.Checkout }}
 

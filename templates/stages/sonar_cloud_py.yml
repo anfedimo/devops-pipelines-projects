@@ -23,7 +23,7 @@ stages:
           maxParallel: 1
         displayName: 'Analyze Code'
         pool:
-          name: sabana-hosted-agents
+          vmImage: 'ubuntu-latest'
         steps:
             
           - checkout: ${{ parameters.Checkout }}
