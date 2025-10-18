@@ -13,8 +13,8 @@ stages:
       - deployment: DeployContainerApp
         displayName: 'Deploy Container App'
         environment: $(environmentName)
-        pool:
-          vmImage: 'ubuntu-latest'
+        pool: 'Default'
+
         strategy:
           runOnce:
             deploy:

@@ -22,8 +22,8 @@ stages:
         strategy:
           maxParallel: 1
         displayName: 'Analyze Code'
-        pool:
-          vmImage: 'ubuntu-latest'
+        pool: 'Default'
+
         steps:
             
           - checkout: ${{ parameters.Checkout }}

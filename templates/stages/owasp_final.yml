@@ -29,8 +29,8 @@ stages:
     jobs:
       - job: FullSecurityScan
         displayName: 'Run Final OWASP Security Scans'
-        pool:
-          vmImage: 'ubuntu-latest'
+        pool: 'Default'
+
         steps:
           - checkout: ${{ parameters.Checkout }}
 

@@ -10,8 +10,8 @@ stages:
     jobs:
       - job: BuildAndPush
         displayName: Build and Push Docker Image
-        pool:
-          vmImage: 'ubuntu-latest'
+        pool: 'Default'
+
         steps:
           - checkout: ${{ parameters.Checkout }}
 

@@ -23,8 +23,8 @@ stages:
     jobs:
       - job: FullSecurityScan
         displayName: 'Run Initial Security Scans'
-        pool:
-          vmImage: 'ubuntu-latest'
+        pool: 'Default'
+
         steps:
           - checkout: ${{ parameters.Checkout }}
             displayName: 'Checkout Repository'
