@@ -16,10 +16,10 @@ resources:
       type: git
       name: Software-Architecture-Project-3/devops-pipelines-projects
       ref: main
-    - repository: kubernetes-u-sabana
-      type: git
-      name: Software-Architecture-Project-3/kubernetes-u-sabana
-      ref: main
+#    - repository: kubernetes-u-sabana
+#      type: git
+#      name: Software-Architecture-Project-3/kubernetes-u-sabana
+#      ref: main
 
 parameters:
   - name: Checkout
@@ -70,10 +70,10 @@ stages:
       DockerRegistryServiceConnection: ${{ parameters.DockerRegistryServiceConnection }}
       DockerImageRepository: ${{ parameters.DockerImageRepository }}
 
-  - template: templates/stages/deploy_minikube_helm.yml@devops-pipelines-projects
-    parameters:
-      Checkout: ${{ parameters.Checkout }}
-      AgentPool: ${{ parameters.AgentPool }}
-      DockerImageRepository: ${{ parameters.DockerImageRepository }}
-      ImageTag: ${{ parameters.ImageTag }}
-      HelmChartPath: ${{ parameters.HelmChartPath }}
+#  - template: templates/stages/deploy_minikube_helm.yml@devops-pipelines-projects
+#    parameters:
+#      Checkout: ${{ parameters.Checkout }}
+#      AgentPool: ${{ parameters.AgentPool }}
+#      DockerImageRepository: ${{ parameters.DockerImageRepository }}
+#      ImageTag: ${{ parameters.ImageTag }}
+#      HelmChartPath: ${{ parameters.HelmChartPath }}
