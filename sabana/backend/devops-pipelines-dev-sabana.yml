@@ -42,8 +42,8 @@ parameters:
   - name: ImageTag
     default: 'latest'
   - name: NameProjectShort
-      type: string
-      default: 'sabana'
+    type: string
+    default: 'sabana'
   - name: HelmChartPath
     type: string
 
