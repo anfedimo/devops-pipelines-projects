@@ -69,10 +69,10 @@ stages:
       DockerImageRepository: ${{ parameters.DockerImageRepository }}
 
   - template: templates/stages/deploy_minikube_helm.yml@devops-pipelines-projects
-      parameters:
-        Checkout: ${{ parameters.Checkout }}
-        AgentPool: ${{ parameters.AgentPool }}
-        DockerImageRepository: ${{ parameters.DockerImageRepository }}
-        ImageTag: ${{ parameters.ImageTag }}
-        NameProjectShort: ${{ parameters.NameProjectShort }}
-        HelmChartPath: ${{ parameters.HelmChartPath }}
+    parameters:
+      Checkout: ${{ parameters.Checkout }}
+      AgentPool: ${{ parameters.AgentPool }}
+      DockerImageRepository: ${{ parameters.DockerImageRepository }}
+      ImageTag: ${{ parameters.ImageTag }}
+      NameProjectShort: ${{ parameters.NameProjectShort }}
+      HelmChartPath: ${{ parameters.HelmChartPath }}
