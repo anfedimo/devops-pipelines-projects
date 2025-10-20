@@ -44,8 +44,8 @@ parameters:
   - name: NameProjectShort
       type: string
       default: 'sabana'
-      - name: HelmChartPath
-        type: string
+  - name: HelmChartPath
+    type: string
 
 stages:
   - template: templates/stages/sonar_cloud_py.yml@devops-pipelines-projects
