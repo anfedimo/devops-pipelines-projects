@@ -9,8 +9,6 @@ parameters:
     type: string
   - name: ImageTag
     type: string
-  - name: NameProjectShort
-    type: string
   - name: HelmChartPath
     type: string
 
