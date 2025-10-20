@@ -16,6 +16,10 @@ resources:
       type: git
       name: Software-Architecture-Project-3/devops-pipelines-projects
       ref: main
+    - repository: kubernetes-u-sabana
+      type: git
+      name: Software-Architecture-Project-3/kubernetes-u-sabana
+      ref: main
 
 parameters:
   - name: Checkout
