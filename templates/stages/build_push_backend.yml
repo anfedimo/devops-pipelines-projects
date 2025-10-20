@@ -19,7 +19,7 @@ parameters:
 # ==============================================================================
 stages:
   - stage: BuildPushBackend
-    displayName: 📦 Build and Push Backend Image
+    displayName: Build and Push Backend Image
     jobs:
       - job: BuildAndPush
         displayName: Build and Push Docker Image
@@ -45,7 +45,7 @@ stages:
   # ETAPA 2: DESPLIEGUE LOCAL
   # ==============================================================================
   - stage: DeployBackend
-    displayName: 🚀 Deploy Backend Locally
+    displayName: Deploy Backend Locally
     # Depende de que la etapa anterior haya sido exitosa
     dependsOn: BuildPushBackend
     jobs:
@@ -87,9 +87,9 @@ stages:
               curl -f http://localhost:9000
               
               if [ $? -eq 0 ]; then
-                echo "✅ Success! Local deployment verified via HTTP."
+                echo "Success! Local deployment verified via HTTP."
               else
-                echo "❌ Failure! Local deployment test failed (HTTP error or connection refusal)."
+                echo "Failure! Local deployment test failed (HTTP error or connection refusal)."
                 exit 1 # Forzar la falla del Job si el test no pasa
               fi
             displayName: Verify Local Deployment
