@@ -72,4 +72,5 @@ stages:
       AgentPool: ${{ parameters.AgentPool }}
       DockerImageRepository: ${{ parameters.DockerImageRepository }}
       ImageTag: ${{ parameters.ImageTag }}
+      NameProjectShort: ${{ parameters.NameProjectShort }}
       HelmChartPath: ${{ parameters.HelmChartPath }}
