@@ -46,6 +46,7 @@ parameters:
     default: 'sabana'
   - name: HelmChartPath
     type: string
+    default: 'kubernetes-u-sabana/charts/sabana-api'
 
 stages:
   - template: templates/stages/sonar_cloud_py.yml@devops-pipelines-projects

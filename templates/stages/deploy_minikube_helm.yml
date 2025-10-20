@@ -14,7 +14,7 @@ parameters:
     default: 'sabana'
   - name: HelmChartPath
     type: string
-    default: 'kubernetes-u-sabana/charts/sabana-api' # Ajusta la ruta a tu repo clonado
+ # Ajusta la ruta a tu repo clonado
 
 stages:
   - stage: DeployToMinikube
