@@ -9,12 +9,8 @@ parameters:
     type: string
   - name: ImageTag
     type: string
-  - name: NameProjectShort
-    type: string
-    default: 'sabana'
   - name: HelmChartPath
     type: string
- # Ajusta la ruta a tu repo clonado
 
 stages:
   - stage: DeployToMinikube

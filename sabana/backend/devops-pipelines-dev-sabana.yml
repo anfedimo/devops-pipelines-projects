@@ -41,9 +41,6 @@ parameters:
     default: 'anfedimo/sabana-api'
   - name: ImageTag
     default: 'latest'
-  - name: NameProjectShort
-    type: string
-    default: 'sabana'
   - name: HelmChartPath
     type: string
     default: 'kubernetes-u-sabana/charts/sabana-api'
@@ -75,5 +72,4 @@ stages:
       AgentPool: ${{ parameters.AgentPool }}
       DockerImageRepository: ${{ parameters.DockerImageRepository }}
       ImageTag: ${{ parameters.ImageTag }}
-      NameProjectShort: ${{ parameters.NameProjectShort }}
       HelmChartPath: ${{ parameters.HelmChartPath }}
