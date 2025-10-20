@@ -1,0 +1,90 @@
+# templates/stages/deploy_minikube_helm.yml
+
+parameters:
+  - name: Checkout
+    type: string
+  - name: AgentPool
+    type: string
+  - name: DockerImageRepository
+    type: string
+  - name: ImageTag
+    type: string
+  - name: NameProjectShort
+    type: string
+    default: 'sabana'
+  - name: HelmChartPath
+    type: string
+    default: 'kubernetes-u-sabana/charts/sabana-api' # Ajusta la ruta a tu repo clonado
+
+stages:
+  - stage: DeployToMinikube
+    displayName: Deploy Helm Chart to Minikube
+    jobs:
+      - deployment: DeployHelm
+        displayName: 'Helm Deployment'
+        pool: ${{ parameters.AgentPool }}
+        environment: Minikube
+
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: ${{ parameters.Checkout }}
+
+                # 1. Iniciar y Configurar Minikube (Requiere que minikube esté instalado en el agente)
+                - task: Bash@3
+                  displayName: 'Start and Configure Minikube'
+                  inputs:
+                    script: |
+                      echo "Starting Minikube..."
+                      minikube start --driver=docker # Usa el driver correcto (ej: docker, virtualbox)
+                      kubectl config use-context minikube
+                      kubectl create namespace dev || true
+
+                # 2. Helm Upgrade/Install
+                - task: HelmDeploy@0
+                  displayName: 'Helm Upgrade/Install'
+                  inputs:
+                    connectionType: 'None'
+                    namespace: 'dev'
+                    command: 'upgrade'
+                    chartType: 'FilePath'
+                    chartPath: '$(Build.SourcesDirectory)/${{ parameters.HelmChartPath }}'
+                    releaseName: 'sabana-release-minikube'
+                    arguments: >
+                      --install
+                      --set image.repository=${{ parameters.DockerImageRepository }}
+                      --set image.tag=${{ parameters.ImageTag }}
+                      --set service.type=NodePort
+
+                # 3. Testear Despliegue (Verificación de coherencia con el pipeline local)
+                - task: Bash@3
+                  displayName: 'Local Test via Port-Forward to 9200'
+                  inputs:
+                    script: |
+                      # El Service Name se construye con el FullName helper: sabana-release-minikube-kubernetes-sabana
+                      SERVICE_NAME="sabana-release-minikube-kubernetes-sabana"
+                      
+                      echo "Waiting for deployment to be ready..."
+                      kubectl rollout status deployment/$SERVICE_NAME --namespace dev --timeout=120s
+                      
+                      # Port-forward: Local 9200 -> Service 80
+                      kubectl port-forward svc/$SERVICE_NAME 9200:80 --namespace dev &
+                      PORT_FORWARD_PID=$!
+                      
+                      echo "Waiting 5 seconds for port-forward to establish (localhost:9200)..."
+                      sleep 5
+                      
+                      # Test (El flag -f asegura la falla si el test no pasa, igual que en build_push_backend.yml)
+                      curl -f http://localhost:9200
+                      CURL_STATUS=$?
+                      
+                      # Detener el proceso de port-forwarding
+                      kill $PORT_FORWARD_PID || true
+                      
+                      if [ $CURL_STATUS -eq 0 ]; then
+                        echo "✅ Success! Kubernetes deployment verified on port 9200."
+                      else
+                        echo "❌ Failure! Kubernetes deployment test failed."
+                        exit 1
+                      fi
