@@ -1,6 +1,6 @@
-# Pipelines de Azure DevOps – sabana
+# Pipelines de Azure DevOps – Sabana
 
-Este repositorio contiene los principales pipelines de Azure DevOps utilizados para automatizar el ciclo de vida de aplicaciones backend en el ecosistema sabana. Cada pipeline cumple una función específica dentro de la integración continua (CI) y entrega continua (CD), cubriendo desde la construcción de imágenes y el análisis de calidad del código, hasta el escaneo de seguridad y el despliegue en ambientes de contenedores.
+Este repositorio contiene los principales pipelines de Azure DevOps utilizados para automatizar el ciclo de vida de aplicaciones backend en el ecosistema Sabana. Cada pipeline cumple una función específica dentro de la integración continua (CI) y entrega continua (CD), cubriendo desde la construcción de imágenes y el análisis de calidad del código, hasta el escaneo de seguridad y el despliegue en ambientes de contenedores.
 
 ---
 
@@ -8,7 +8,7 @@ Este repositorio contiene los principales pipelines de Azure DevOps utilizados p
 
 | Pipeline (YAML)                      | Propósito Principal                                                                    |
 | ------------------------------------- | ---------------------------------------------------------------------------           |
-| `devops-pipelines-dev-sabana.yml`   | Orquestador general. Ejecuta los stages que integran los demás pipelines.             |
+| `devops-pipelines-dev-Sabana.yml`   | Orquestador general. Ejecuta los stages que integran los demás pipelines.             |
 | `build_push_backend.yml`              | Construcción y push de la imagen Docker del backend a Azure Container Registry (ACR). |
 | `sonar_cloud_py.yml`                  | Análisis de calidad y cobertura de código con SonarCloud.                             |
 | `owasp_Initial_py.yml`                | Escaneo inicial de seguridad usando herramientas OWASP (SCA, SAST, etc.).             |
@@ -33,7 +33,7 @@ Este repositorio contiene los principales pipelines de Azure DevOps utilizados p
    `deploy_app_container.yml` despliega automáticamente la aplicación usando la imagen más reciente en Kubernetes o Azure Container Apps.
 
 5. **Orquestación General:**  
-   El pipeline principal (`devops-pipelines-dev-sabana.yml`) orquesta todos los pasos anteriores, permitiendo un flujo CI/CD completo, seguro y automatizado.
+   El pipeline principal (`devops-pipelines-dev-Sabana.yml`) orquesta todos los pasos anteriores, permitiendo un flujo CI/CD completo, seguro y automatizado.
 
 ---
 
@@ -60,3 +60,4 @@ Este repositorio contiene los principales pipelines de Azure DevOps utilizados p
 > Para cualquier consulta o mejora sobre estos pipelines, por favor abre un issue o contacta al equipo de DevOps.
 
 # Arquitectura de Software — Universidad de La Sabana — Grupo 14 — 2025
+
