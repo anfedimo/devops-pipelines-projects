@@ -58,3 +58,5 @@ Este repositorio contiene los principales pipelines de Azure DevOps utilizados p
 ---
 
 > Para cualquier consulta o mejora sobre estos pipelines, por favor abre un issue o contacta al equipo de DevOps.
+
+# Arquitectura de Software — Universidad de La Sabana — Grupo 14 — 2025
